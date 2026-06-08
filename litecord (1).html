@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LiteCord — Messagerie open source</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0e10;--bg2:#111214;--bg3:#18191c;--bg4:#1e1f22;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);
+  --text:#e8e8e8;--text2:rgba(255,255,255,0.5);--text3:rgba(255,255,255,0.25);
+  --blue:#4f8ef7;--green:#3ecfa3;--amber:#fab247;--red:#ed4245;
+  --font:'DM Sans',sans-serif;--mono:'Space Mono',monospace;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden;height:100vh}
+.btn{padding:7px 16px;border-radius:var(--radius);font-size:13px;font-family:var(--font);cursor:pointer;font-weight:500;transition:all .2s;border:0.5px solid transparent}
+.btn-ghost{background:transparent;border-color:var(--border2);color:var(--text2)}
+.btn-ghost:hover{background:rgba(255,255,255,0.06);color:#fff}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:17px;font-weight:700;color:#fff;cursor:pointer;text-decoration:none}
+.logo-icon{width:30px;height:30px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
+
+/* ── APP PAGE ── */
+#app-page{display:flex;height:100vh;flex-direction:column}
+.app-nav{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:48px;background:var(--bg2);border-bottom:0.5px solid var(--border);flex-shrink:0}
+.app-nav .logo{font-size:14px}
+.app-body{display:flex;flex:1;overflow:hidden}
+
+/* Servers */
+.servers{width:60px;background:var(--bg2);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:6px;border-right:0.5px solid rgba(255,255,255,0.04);overflow-y:auto;flex-shrink:0}
+.servers::-webkit-scrollbar{display:none}
+.srv-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-radius .18s,transform .15s;font-size:13px;font-weight:600;color:#fff;position:relative;flex-shrink:0}
+.srv-icon:hover{border-radius:14px;transform:scale(1.05)}
+.srv-icon.active{border-radius:14px}
+.srv-icon.add-srv{background:rgba(255,255,255,0.06);color:var(--green);font-size:22px}
+.srv-icon.add-srv:hover{background:var(--green);color:#fff}
+.srv-sep{width:32px;height:0.5px;background:var(--border2)}
+.srv-notif::after{content:'';position:absolute;bottom:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:var(--red);border:2px solid var(--bg2)}
+
+/* Sidebar */
+.sidebar{width:220px;background:var(--bg3);display:flex;flex-direction:column;flex-shrink:0;border-right:0.5px solid rgba(255,255,255,0.04)}
+.srv-header{padding:14px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;flex-shrink:0}
+.srv-header:hover{background:rgba(255,255,255,0.03)}
+.srv-header-name{color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+.srv-header-name i{font-size:14px;color:rgba(255,255,255,0.35)}
+.channels-list{flex:1;overflow-y:auto;padding:8px 0}
+.channels-list::-webkit-scrollbar{width:3px}
+.channels-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+.ch-group{margin-bottom:4px}
+.ch-group-label{display:flex;align-items:center;justify-content:space-between;padding:4px 8px 4px 14px;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;cursor:pointer;user-select:none}
+.ch-group-label:hover{color:var(--text2)}
+.ch-group-label i{font-size:14px}
+.ch-item{display:flex;align-items:center;gap:7px;padding:5px 8px 5px 12px;margin:1px 6px;border-radius:5px;cursor:pointer;color:rgba(255,255,255,.35);font-size:13px;transition:background .1s,color .1s}
+.ch-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.75)}
+.ch-item.active{background:rgba(255,255,255,.1);color:#fff}
+.ch-item i{font-size:15px;flex-shrink:0}
+.ch-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:600}
+.ch-actions{margin-left:auto;display:none;gap:3px}
+.ch-item:hover .ch-actions{display:flex}
+.ch-actions i{font-size:14px;padding:2px;border-radius:3px;color:var(--text2)}
+.ch-actions i:hover{background:rgba(255,255,255,.1);color:#fff}
+.userbar{background:#111214;padding:8px 10px;display:flex;align-items:center;gap:8px;border-top:0.5px solid var(--border);flex-shrink:0}
+.uav{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;position:relative;color:#fff}
+.uav .ustatus{position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-radius:50%;border:2px solid #111214}
+.uinfo{flex:1;min-width:0}
+.uname{color:#fff;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.utag{color:var(--text3);font-size:10px}
+.ub-icons{display:flex}
+.ub-icons i{font-size:18px;color:rgba(255,255,255,.3);padding:4px;border-radius:4px;cursor:pointer}
+.ub-icons i:hover{color:#fff;background:rgba(255,255,255,.07)}
+
+/* Main chat */
+.main-chat{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.chat-header{padding:0 16px;height:48px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;background:var(--bg4)}
+.chat-header-name{color:#fff;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.chat-header-name i{color:rgba(255,255,255,.4);font-size:18px}
+.chat-topic{font-size:12px;color:var(--text3);padding-left:12px;border-left:0.5px solid var(--border2);margin-left:4px}
+.chat-tools{margin-left:auto;display:flex;gap:2px}
+.chat-tools i{font-size:18px;color:rgba(255,255,255,.3);padding:6px;border-radius:5px;cursor:pointer}
+.chat-tools i:hover{color:#fff;background:rgba(255,255,255,.07)}
+.messages-area{flex:1;overflow-y:auto;padding:16px 0}
+.messages-area::-webkit-scrollbar{width:4px}
+.messages-area::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+.msg-group{padding:4px 16px;display:flex;gap:14px;cursor:pointer}
+.msg-group:hover{background:rgba(255,255,255,0.025)}
+.msg-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0;margin-top:2px}
+.msg-right{flex:1;min-width:0}
+.msg-header{display:flex;align-items:baseline;gap:8px;margin-bottom:3px}
+.msg-name{font-size:15px;font-weight:600;color:#fff}
+.msg-name.bot{color:var(--blue)}
+.msg-time{font-size:11px;color:var(--text3)}
+.msg-text{font-size:14px;color:rgba(255,255,255,.8);line-height:1.55}
+.msg-text.continue{padding:1px 0;font-size:14px;color:rgba(255,255,255,.8);line-height:1.55}
+.msg-cont{padding:1px 16px 1px 68px;cursor:pointer}
+.msg-cont:hover{background:rgba(255,255,255,0.025)}
+.msg-cont p{font-size:14px;color:rgba(255,255,255,.8);line-height:1.55}
+.date-sep{display:flex;align-items:center;gap:12px;padding:16px 16px 8px;color:var(--text3);font-size:12px;font-weight:500}
+.date-sep::before,.date-sep::after{content:'';flex:1;height:0.5px;background:var(--border)}
+.msg-embed{background:rgba(255,255,255,0.04);border-left:3px solid var(--blue);border-radius:0 var(--radius) var(--radius) 0;padding:10px 14px;margin-top:6px;max-width:420px}
+.embed-title{font-size:14px;font-weight:600;color:var(--blue);margin-bottom:4px}
+.embed-text{font-size:13px;color:var(--text2);line-height:1.5}
+.reaction{display:inline-flex;align-items:center;gap:5px;background:rgba(79,142,247,0.12);border:0.5px solid rgba(79,142,247,0.2);border-radius:6px;padding:3px 8px;font-size:12px;color:rgba(255,255,255,.7);cursor:pointer;margin-top:6px;margin-right:4px}
+.reaction:hover{background:rgba(79,142,247,0.2)}
+.reaction.active{background:rgba(79,142,247,0.2);border-color:rgba(79,142,247,0.4);color:#fff}
+.system-msg{padding:6px 16px;font-size:12.5px;color:var(--text3);display:flex;align-items:center;gap:8px}
+.system-msg i{font-size:14px;color:var(--green)}
+
+/* Input area */
+.input-area{padding:0 16px 16px;flex-shrink:0}
+.input-box{background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;display:flex;align-items:center;gap:8px;padding:0 12px}
+.input-box:focus-within{border-color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.08)}
+.input-left i{font-size:20px;color:rgba(255,255,255,.3);cursor:pointer;padding:12px 0}
+.input-left i:hover{color:#fff}
+.msg-input{flex:1;background:transparent;border:none;outline:none;color:#fff;font-size:14px;font-family:var(--font);padding:12px 0;caret-color:var(--blue)}
+.msg-input::placeholder{color:rgba(255,255,255,.25)}
+.input-right{display:flex;gap:2px}
+.input-right i{font-size:18px;color:rgba(255,255,255,.3);cursor:pointer;padding:6px}
+.input-right i:hover{color:#fff}
+
+/* Members sidebar */
+.members{width:220px;background:var(--bg3);border-left:0.5px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.members::-webkit-scrollbar{width:3px}
+.members::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08)}
+.members-head{padding:14px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+.member-item{padding:6px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:5px;margin:0 6px;transition:background .1s}
+.member-item:hover{background:rgba(255,255,255,.06)}
+.member-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;position:relative;flex-shrink:0}
+.member-av .st{position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--bg3)}
+.st.online{background:var(--green)}
+.st.idle{background:var(--amber)}
+.st.dnd{background:var(--red)}
+.member-name{font-size:13px;color:rgba(255,255,255,.55);font-weight:500}
+.member-name:hover{color:#fff}
+.member-role{font-size:10px;color:var(--text3)}
+.members-group-label{padding:12px 14px 4px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+</style>
+</head>
+<body>
+
+<!-- ────────── APP PAGE ────────── -->
+<div id="app-page">
+
+  <div class="app-nav">
+    <a class="logo">
+      <div class="logo-icon" style="width:24px;height:24px;font-size:10px;border-radius:5px">LC</div>
+      LiteCord
+    </a>
+    <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+      <i class="ti ti-bell" style="font-size:18px;color:var(--text2);cursor:pointer;padding:6px"></i>
+      <i class="ti ti-settings" style="font-size:18px;color:var(--text2);cursor:pointer;padding:6px"></i>
+    </div>
+  </div>
+
+  <div class="app-body">
+
+    <!-- Servers column -->
+    <div class="servers" id="servers">
+      <div class="srv-icon active" style="background:var(--blue)" onclick="selectServer(this,'LiteCord HQ','#4f8ef7')" title="LiteCord HQ">LC</div>
+      <div class="srv-sep"></div>
+      <div class="srv-icon srv-notif" style="background:#5865f2" onclick="selectServer(this,'Open Source','#5865f2')" title="Open Source">OS</div>
+      <div class="srv-icon" style="background:var(--green)" onclick="selectServer(this,'Privacy Lab','#3ecfa3')" title="Privacy Lab">PL</div>
+      <div class="srv-icon" style="background:var(--amber)" onclick="selectServer(this,'Dev Corner','#fab247')" title="Dev Corner">DC</div>
+      <div class="srv-icon" style="background:#9b59b6" onclick="selectServer(this,'Design Space','#9b59b6')" title="Design Space">DS</div>
+      <div class="srv-sep"></div>
+      <div class="srv-icon add-srv" title="Ajouter un serveur">+</div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="srv-header">
+        <div class="srv-header-name" id="srv-title">LiteCord HQ <i class="ti ti-chevron-down"></i></div>
+      </div>
+      <div class="channels-list" id="channels-list">
+        <!-- dynamically filled -->
+      </div>
+      <div class="userbar">
+        <div class="uav" style="background:var(--blue)">
+          Vo
+          <div class="ustatus" style="background:var(--green)"></div>
+        </div>
+        <div class="uinfo">
+          <div class="uname">vous</div>
+          <div class="utag">#0001</div>
+        </div>
+        <div class="ub-icons">
+          <i class="ti ti-microphone"></i>
+          <i class="ti ti-headphones"></i>
+          <i class="ti ti-settings"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main chat area -->
+    <div class="main-chat" id="main-chat">
+      <div class="chat-header">
+        <div class="chat-header-name" id="chat-title"><i class="ti ti-hash"></i> général</div>
+        <span class="chat-topic" id="chat-topic">Bienvenue dans LiteCord — parlez sans compromis</span>
+        <div class="chat-tools">
+          <i class="ti ti-search" title="Rechercher"></i>
+          <i class="ti ti-at" title="Mentions"></i>
+          <i class="ti ti-inbox" title="Boîte de réception"></i>
+          <i class="ti ti-help" title="Aide"></i>
+        </div>
+      </div>
+      <div class="messages-area" id="messages-area">
+        <!-- messages loaded dynamically -->
+      </div>
+      <div class="input-area">
+        <div class="input-box">
+          <div class="input-left"><i class="ti ti-circle-plus"></i></div>
+          <input class="msg-input" id="msg-input" placeholder="Message #général" onkeydown="handleKey(event)">
+          <div class="input-right">
+            <i class="ti ti-gift"></i>
+            <i class="ti ti-photo"></i>
+            <i class="ti ti-mood-smile"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Members panel -->
+    <div class="members" id="members-panel">
+      <div class="members-head">Membres — <span id="member-count">5</span></div>
+      <div id="members-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const servers = {
+  'LiteCord HQ': {
+    color: '#4f8ef7',
+    channels: {
+      'GÉNÉRAL': [
+        {name:'général', type:'text', active:true, topic:'Bienvenue dans LiteCord — parlez sans compromis'},
+        {name:'annonces', type:'text', topic:'Mises à jour officielles du projet'},
+        {name:'bienvenue', type:'text', topic:'Rejoins la communauté'}
+      ],
+      'VOCAL': [
+        {name:'Lounge', type:'voice'},
+        {name:'Dev Talk', type:'voice'}
+      ],
+      'DÉVELOPPEMENT': [
+        {name:'contribute', type:'text', badge:2, topic:'Contribuer au projet open source'},
+        {name:'bugs', type:'text', topic:'Signaler des problèmes'},
+        {name:'releases', type:'text', topic:'Nouvelles versions'}
+      ]
+    },
+    members: [
+      {initials:'AL',name:'alex',tag:'#1234',color:'#4f8ef7',status:'online',role:'Admin'},
+      {initials:'MA',name:'marie',tag:'#5678',color:'#3ecfa3',status:'online',role:'Modérateur'},
+      {initials:'TH',name:'theo',tag:'#9012',color:'#fab247',status:'idle',role:'Membre'},
+      {initials:'SA',name:'sarah',tag:'#3456',color:'#9b59b6',status:'online',role:'Membre'},
+      {initials:'LU',name:'lucas',tag:'#7890',color:'#ed4245',status:'dnd',role:'Membre'}
+    ]
+  },
+  'Open Source': {
+    color: '#5865f2',
+    channels: {
+      'GÉNÉRAL': [
+        {name:'général', type:'text', active:true, topic:'Discussions open source'},
+        {name:'projets', type:'text', topic:'Partagez vos projets'}
+      ],
+      'COMMUNAUTÉ': [
+        {name:'aide', type:'text', badge:5, topic:'Questions et réponses'},
+        {name:'showcase', type:'text', topic:'Montrez vos créations'}
+      ]
+    },
+    members: [
+      {initials:'PC',name:'pierre',tag:'#0001',color:'#5865f2',status:'online',role:'Admin'},
+      {initials:'JU',name:'julie',tag:'#0002',color:'#3ecfa3',status:'online',role:'Membre'},
+      {initials:'NO',name:'noah',tag:'#0003',color:'#fab247',status:'idle',role:'Membre'}
+    ]
+  },
+  'Privacy Lab': {
+    color: '#3ecfa3',
+    channels: {
+      'RECHERCHE': [
+        {name:'général', type:'text', active:true, topic:'Recherche en sécurité et vie privée'},
+        {name:'outils', type:'text', topic:'Outils de protection'},
+        {name:'actualités', type:'text', badge:3, topic:'Actualités privacy'}
+      ]
+    },
+    members: [
+      {initials:'EL',name:'elena',tag:'#0101',color:'#3ecfa3',status:'online',role:'Admin'},
+      {initials:'MA',name:'max',tag:'#0102',color:'#4f8ef7',status:'dnd',role:'Chercheur'}
+    ]
+  },
+  'Dev Corner': {
+    color: '#fab247',
+    channels: {
+      'CODE': [
+        {name:'général', type:'text', active:true, topic:'Discussions développement'},
+        {name:'javascript', type:'text', topic:'JS & TypeScript'},
+        {name:'python', type:'text', topic:'Python & Django'},
+        {name:'rust', type:'text', badge:1, topic:'Rust lang'}
+      ],
+      'RESSOURCES': [
+        {name:'tutoriels', type:'text', topic:'Apprendre ensemble'},
+        {name:'emploi', type:'text', topic:'Offres et opportunités'}
+      ]
+    },
+    members: [
+      {initials:'RO',name:'romain',tag:'#2001',color:'#fab247',status:'online',role:'Admin'},
+      {initials:'CL',name:'claire',tag:'#2002',color:'#3ecfa3',status:'online',role:'Membre'},
+      {initials:'AD',name:'adrien',tag:'#2003',color:'#4f8ef7',status:'idle',role:'Membre'}
+    ]
+  },
+  'Design Space': {
+    color: '#9b59b6',
+    channels: {
+      'DESIGN': [
+        {name:'général', type:'text', active:true, topic:'Discussions design & UX'},
+        {name:'inspiration', type:'text', topic:'Partage de ressources visuelles'},
+        {name:'feedback', type:'text', badge:2, topic:'Retours sur vos créations'}
+      ]
+    },
+    members: [
+      {initials:'IN',name:'ines',tag:'#3001',color:'#9b59b6',status:'online',role:'Admin'},
+      {initials:'BA',name:'baptiste',tag:'#3002',color:'#fab247',status:'online',role:'Designer'}
+    ]
+  }
+};
+
+const messageHistory = {
+  'général_LiteCord HQ': [
+    {av:'AL',color:'#4f8ef7',name:'alex',time:'Aujourd\'hui à 10:12',text:'Bonjour tout le monde ! 👋',reactions:[{emoji:'👋',count:3,active:false}]},
+    {av:'MA',color:'#3ecfa3',name:'marie',time:'Aujourd\'hui à 10:14',text:'Salut ! Vous avez vu la nouvelle version de LiteCord ? Ils ont réduit la taille à 11.8 MB !'},
+    {av:'TH',color:'#fab247',name:'theo',time:'Aujourd\'hui à 10:15',text:'Incroyable, j\'ai contribué au repo hier — la codebase est vraiment propre 👌',embed:{title:'Pull Request #142 — Optimize bundle size',text:'Reduces initial load by 23% by lazy-loading non-critical modules'}},
+    {av:'SA',color:'#9b59b6',name:'sarah',time:'Aujourd\'hui à 10:18',text:'C\'est exactement ce qu\'on attendait. Discord utilise 10x plus de RAM pour la même chose.'},
+    {av:'AL',color:'#4f8ef7',name:'alex',time:'Aujourd\'hui à 10:20',text:'Et pas un seul tracker ! J\'ai vérifié le trafic réseau, c\'est vraiment propre.',reactions:[{emoji:'🔒',count:5,active:true},{emoji:'✅',count:2,active:false}]},
+    {av:'LU',color:'#ed4245',name:'lucas',time:'Aujourd\'hui à 10:24',text:'Je viens de tester le chiffrement E2E, ça marche parfaitement. Les clés ne quittent jamais le client.'},
+  ],
+  'annonces_LiteCord HQ': [
+    {av:'AL',color:'#4f8ef7',name:'alex',time:'Hier à 18:00',text:'📢 LiteCord v1.0.0 est maintenant disponible ! Retrouvez toutes les nouveautés sur le GitHub.',embed:{title:'LiteCord v1.0.0 — Stable Release',text:'• Taille réduite à 11.8 MB\n• Chiffrement E2E activé par défaut\n• Zéro dépendance de télémétrie\n• Support auto-hébergement amélioré'}},
+  ],
+  'contribute_LiteCord HQ': [
+    {av:'TH',color:'#fab247',name:'theo',time:'Aujourd\'hui à 09:30',text:'PR #142 est prête pour review — optimisation du bundle size (-23%)'},
+    {av:'MA',color:'#3ecfa3',name:'marie',time:'Aujourd\'hui à 09:45',text:'Je review ça ce soir ! Beau travail sur les imports dynamiques 🎉'},
+  ]
+};
+
+let currentServer = 'LiteCord HQ';
+let currentChannel = 'général';
+let currentMessages = [];
+
+function showPage(id) {}
+
+function selectServer(el, name, color) {
+  document.querySelectorAll('.srv-icon').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  currentServer = name;
+  document.getElementById('srv-title').innerHTML = name + ' <i class="ti ti-chevron-down"></i>';
+  renderChannels(name);
+  renderMembers(name);
+  const srv = servers[name];
+  const firstGroup = Object.keys(srv.channels)[0];
+  const firstCh = srv.channels[firstGroup][0].name;
+  loadMessages(firstCh, name);
+}
+
+function renderChannels(srvName) {
+  const srv = servers[srvName];
+  const list = document.getElementById('channels-list');
+  list.innerHTML = '';
+  for (const [group, chs] of Object.entries(srv.channels)) {
+    const grp = document.createElement('div');
+    grp.className = 'ch-group';
+    grp.innerHTML = `<div class="ch-group-label"><span>${group}</span><i class="ti ti-chevron-down"></i></div>`;
+    chs.forEach(ch => {
+      const el = document.createElement('div');
+      el.className = 'ch-item' + (ch.active ? ' active' : '');
+      el.innerHTML = `<i class="ti ti-${ch.type === 'voice' ? 'volume' : 'hash'}"></i>${ch.name}${ch.badge ? `<span class="ch-badge">${ch.badge}</span>` : ''}
+        ${ch.type !== 'voice' ? `<div class="ch-actions"><i class="ti ti-user-plus"></i><i class="ti ti-settings"></i></div>` : ''}`;
+      el.onclick = () => {
+        if (ch.type === 'voice') return;
+        document.querySelectorAll('.ch-item').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        if (el.querySelector('.ch-badge')) el.querySelector('.ch-badge').remove();
+        ch.badge = 0;
+        loadMessages(ch.name, srvName);
+        document.getElementById('chat-topic').textContent = ch.topic || '';
+      };
+      grp.appendChild(el);
+    });
+    list.appendChild(grp);
+  }
+}
+
+function renderMembers(srvName) {
+  const members = servers[srvName].members;
+  const list = document.getElementById('members-list');
+  document.getElementById('member-count').textContent = members.length;
+  list.innerHTML = `<div class="members-group-label">En ligne — ${members.filter(m=>m.status!=='offline').length}</div>`;
+  members.forEach(m => {
+    list.innerHTML += `
+      <div class="member-item">
+        <div class="member-av" style="background:${m.color}">
+          ${m.initials}
+          <div class="st ${m.status}"></div>
+        </div>
+        <div>
+          <div class="member-name">${m.name}</div>
+          <div class="member-role">${m.role}</div>
+        </div>
+      </div>`;
+  });
+}
+
+function loadMessages(channel, srvName) {
+  currentChannel = channel;
+  const key = channel + '_' + srvName;
+  const messages = messageHistory[key] || [];
+  const area = document.getElementById('messages-area');
+  const inputEl = document.getElementById('msg-input');
+  inputEl.placeholder = `Message #${channel}`;
+  document.getElementById('chat-title').innerHTML = `<i class="ti ti-hash"></i> ${channel}`;
+
+  area.innerHTML = `<div class="date-sep">Début du salon #${channel}</div>`;
+
+  if (messages.length === 0) {
+    area.innerHTML += `<div style="padding:32px 16px;text-align:center;color:var(--text3);font-size:14px">Aucun message pour l'instant. Soyez le premier à écrire !</div>`;
+  } else {
+    messages.forEach(m => {
+      area.innerHTML += buildMessage(m);
+    });
+  }
+  area.scrollTop = area.scrollHeight;
+  currentMessages = messages;
+  // bind reactions
+  area.querySelectorAll('.reaction').forEach(r => {
+    r.onclick = () => {
+      r.classList.toggle('active');
+      const cnt = r.querySelector('.r-count');
+      cnt.textContent = r.classList.contains('active') ? parseInt(cnt.textContent)+1 : parseInt(cnt.textContent)-1;
+    };
+  });
+}
+
+function buildMessage(m) {
+  return `
+    <div class="msg-group">
+      <div class="msg-avatar" style="background:${m.color}">${m.av}</div>
+      <div class="msg-right">
+        <div class="msg-header">
+          <span class="msg-name">${m.name}</span>
+          <span class="msg-time">${m.time}</span>
+        </div>
+        <div class="msg-text">${m.text}</div>
+        ${m.embed ? `<div class="msg-embed"><div class="embed-title">${m.embed.title}</div><div class="embed-text">${m.embed.text}</div></div>` : ''}
+        ${m.reactions ? m.reactions.map(r => `<span class="reaction ${r.active?'active':''}"><span>${r.emoji}</span><span class="r-count">${r.count}</span></span>`).join('') : ''}
+      </div>
+    </div>`;
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter') sendMessage();
+}
+
+function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const area = document.getElementById('messages-area');
+  const now = new Date();
+  const time = `Aujourd'hui à ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const msg = {av:'Vo',color:'#4f8ef7',name:'vous',time,text};
+  area.innerHTML += buildMessage(msg);
+  area.scrollTop = area.scrollHeight;
+  input.value = '';
+}
+
+// Init app on load
+window.onload = () => {
+  renderChannels('LiteCord HQ');
+  renderMembers('LiteCord HQ');
+  loadMessages('général','LiteCord HQ');
+};
+</script>
+</body>
+</html>
